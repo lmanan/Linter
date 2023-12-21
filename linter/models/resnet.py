@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 
-from linter.models.utils import Normalize
+from linter.models.utils import normalize
 from linter.models.utils import nonlinearity
 
 class ResnetBlock(nn.Module):
@@ -20,13 +20,13 @@ class ResnetBlock(nn.Module):
         self.out_channels = out_channels
         self.use_conv_shortcut = conv_shortcut
 
-        self.norm1 = Normalize(in_channels)
+        self.norm1 = normalize(in_channels)
         self.conv1 = torch.nn.Conv2d(
             in_channels, out_channels, kernel_size=3, stride=1, padding=1
         )
         if temb_channels > 0:
             self.temb_proj = torch.nn.Linear(temb_channels, out_channels)
-        self.norm2 = Normalize(out_channels)
+        self.norm2 = normalize(out_channels)
         self.dropout = torch.nn.Dropout(dropout)
         self.conv2 = torch.nn.Conv2d(
             out_channels, out_channels, kernel_size=3, stride=1, padding=1

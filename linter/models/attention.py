@@ -1,13 +1,13 @@
 import torch
 import torch.nn as nn
-from linter.models.utils import Normalize
+from linter.models.utils import normalize
 
 class AttnBlock(nn.Module):
     def __init__(self, in_channels):
         super().__init__()
         self.in_channels = in_channels
 
-        self.norm = Normalize(in_channels)
+        self.norm = normalize(in_channels)
         self.q = torch.nn.Conv2d(
             in_channels, in_channels, kernel_size=1, stride=1, padding=0
         )

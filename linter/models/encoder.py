@@ -4,7 +4,7 @@ from einops import rearrange
 
 from linter.models.attention import AttnBlock, make_attn
 from linter.models.resnet import ResnetBlock
-from linter.models.utils import Normalize, nonlinearity
+from linter.models.utils import normalize, nonlinearity
 from linter.models.updownsample import Downsample
 
 class Encoder(nn.Module):
@@ -27,9 +27,6 @@ class Encoder(nn.Module):
         **ignore_kwargs,
     ):
         super().__init__()
-
-        print(f"ch = {ch}")
-        print(f"out ch = {out_ch}")
 
         if use_linear_attn:
             attn_type = "linear"
@@ -91,7 +88,7 @@ class Encoder(nn.Module):
         )
 
         # end
-        self.norm_out = Normalize(block_in)
+        self.norm_out = normalize(block_in)
         self.conv_out = torch.nn.Conv2d(
             block_in,
             2 * z_channels if double_z else z_channels,

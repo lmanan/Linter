@@ -4,7 +4,7 @@ import torch.nn as nn
 
 from linter.models.attention import AttnBlock, make_attn
 from linter.models.resnet import ResnetBlock
-from linter.models.utils import Normalize, nonlinearity
+from linter.models.utils import normalize, nonlinearity
 from linter.models.updownsample import Upsample
 
 class Decoder(nn.Module):
@@ -98,7 +98,7 @@ class Decoder(nn.Module):
             self.up.insert(0, up)  # prepend to get consistent order
 
         # end
-        self.norm_out = Normalize(block_in)
+        self.norm_out = normalize(block_in)
         self.conv_out = torch.nn.Conv2d(
             block_in, out_ch, kernel_size=3, stride=1, padding=1
         )
