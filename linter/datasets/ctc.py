@@ -5,17 +5,19 @@ from glob import glob
 import numpy as np
 import tifffile
 from csbdeep.utils import normalize
+from skimage.measure import label
 from torch.utils.data import Dataset
 
 
 class CTCDataset(Dataset):
-    def __init__(self, data_dir, patch_size=256, size=None):
+    def __init__(self, data_dir, patch_size=128, size=None):
         print(f"{self.__class__.__name__} created! Accessing data from {data_dir}")
         self.image_list = glob(os.path.join(data_dir, "images", "*.tif"))
         self.mask_list = glob(os.path.join(data_dir, "masks", "*.tif"))
         assert len(self.image_list) == len(self.mask_list)
         self.size = size
         self.real_size = len(self.image_list)
+        print(f"Number of files detected in dataset equals {self.real_size}")
         self.patch_size = patch_size
 
     def __len__(self):
@@ -48,10 +50,11 @@ class CTCDataset(Dataset):
                     top_left[0] : bottom_right[0],
                     top_left[1] : bottom_right[1],
                 ]
-                sample["mask_crop"] = mask[
+                mask_crop = mask[
                     np.newaxis,
                     top_left[0] : bottom_right[0],
                     top_left[1] : bottom_right[1],
                 ]
+                sample["mask_crop"] = label(mask_crop)[np.newaxis, ...].astype(np.uint8)
                 bbox_outside = False
         return sample

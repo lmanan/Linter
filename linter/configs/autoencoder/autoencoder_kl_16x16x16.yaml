@@ -1,0 +1,39 @@
+train_config:
+  initial_learning_rate: 4.5e-6
+  device: 'mps'
+  batch_size: 32 # TODO
+  num_workers: 8 # TODO
+  max_iterations: 100000 # TODO
+  save_model_every: 200 # TODO
+  save_snapshot_every: 200 # TODO
+
+model_config:
+  target: linter.models.autoencoder.AutoencoderKL
+  embed_dim: 16
+  initialize: True # TODO
+  checkpoint: 'None' # TODO
+  dd_config:
+    double_z: True
+    z_channels: 16
+    resolution: 256
+    in_channels: 1 # TODO: This was 3 before
+    out_ch: 1 # TODO: This was 3 before
+    ch: 128
+    ch_mult: [ 1,1,2,2,4 ]  # num_down = len(ch_mult)-1
+    num_res_blocks: 2
+    attn_resolutions: [ 16 ]
+    dropout: 0.0
+
+loss_config:
+  target: linter.criterions.LPIPSWithDiscriminator
+  params:
+    disc_start: 50001
+    kl_weight: 0.000001
+    disc_weight: 0.5
+
+dataset_config:
+  data_dir: '/Users/lalitm/Desktop/data/2d-HeLa/Fluo-N2DL-HeLa/train'
+  patch_size: 128
+
+
+
