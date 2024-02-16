@@ -1,13 +1,13 @@
 import os
+from pprint import pprint
 
 import torch
 import yaml
-from tqdm import tqdm
-
 from linter.criterions import get_loss
 from linter.datasets import get_dataset
 from linter.models import get_model
 from linter.utils import get_logger
+from tqdm import tqdm
 
 
 def train(experiment_config):
@@ -160,9 +160,10 @@ def save_snapshot(batch, prediction, iteration):
 
 
 if __name__ == "__main__":
-    with open("configs/autoencoder/autoencoder_kl_4x4x4.yaml") as stream:
+    with open("linter/configs/autoencoder/autoencoder_kl_4x4x4.yaml") as stream:
         try:
             experiment_config = yaml.safe_load(stream)
         except yaml.YAMLError as exc:
             print(exc)
+    pprint(f"Experiment Config is \n{experiment_config}")
     train(experiment_config)

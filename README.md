@@ -17,3 +17,4 @@ TODO:
 - [ ] What is `ActNorm`?
 - [ ] What does `hinge_d_loss` do?
 - [ ] What are the four outputs expected by the criterion?
+- [ ] In data, what is target (currently set as main.DataModuleFromConfig)
