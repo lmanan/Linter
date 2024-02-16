@@ -1,11 +1,11 @@
 import torch
 import torch.nn as nn
-from einops import rearrange
 
-from linter.models.attention import AttnBlock, make_attn
+from linter.models.attention import make_attn
 from linter.models.resnet import ResnetBlock
-from linter.models.utils import normalize, nonlinearity
 from linter.models.updownsample import Downsample
+from linter.models.utils import nonlinearity, normalize
+
 
 class Encoder(nn.Module):
     def __init__(
@@ -43,7 +43,7 @@ class Encoder(nn.Module):
         )
 
         curr_res = resolution
-        in_ch_mult = (1,) + tuple(ch_mult)
+        in_ch_mult = (1, *tuple(ch_mult))
         self.in_ch_mult = in_ch_mult
         self.down = nn.ModuleList()
         for i_level in range(self.num_resolutions):
@@ -123,11 +123,3 @@ class Encoder(nn.Module):
         h = nonlinearity(h)
         h = self.conv_out(h)
         return h
-
-
-
-
-
-
-
-

@@ -1,10 +1,9 @@
+import numpy as np
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 
 from linter.models.decoder import Decoder
 from linter.models.encoder import Encoder
-
 
 
 class AutoencoderKL(nn.Module):
@@ -49,7 +48,8 @@ class AutoencoderKL(nn.Module):
         x = x.permute(0, 3, 1, 2).to(memory_format=torch.contiguous_format).float()
         return x
 
-class DiagonalGaussianDistribution(object):
+
+class DiagonalGaussianDistribution:
     def __init__(self, parameters, deterministic=False):
         self.parameters = parameters
         self.mean, self.logvar = torch.chunk(parameters, 2, dim=1)

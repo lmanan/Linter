@@ -1,6 +1,9 @@
 import torch
 import torch.nn as nn
+from einops import rearrange
+
 from linter.models.utils import normalize
+
 
 class AttnBlock(nn.Module):
     def __init__(self, in_channels):
@@ -48,7 +51,6 @@ class AttnBlock(nn.Module):
         return x + h_
 
 
-
 class LinearAttention(nn.Module):
     def __init__(self, dim, heads=4, dim_head=32):
         super().__init__()
@@ -71,11 +73,13 @@ class LinearAttention(nn.Module):
         )
         return self.to_out(out)
 
+
 class LinAttnBlock(LinearAttention):
     """to match AttnBlock usage"""
 
     def __init__(self, in_channels):
         super().__init__(dim=in_channels, heads=1, dim_head=in_channels)
+
 
 def make_attn(in_channels, attn_type="vanilla"):
     assert attn_type in ["vanilla", "linear", "none"], f"attn_type {attn_type} unknown"

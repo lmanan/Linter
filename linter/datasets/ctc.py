@@ -1,60 +1,89 @@
+import glob
 import os
 import random
-from glob import glob
 
 import numpy as np
 import tifffile
 from csbdeep.utils import normalize
-from skimage.measure import label
 from torch.utils.data import Dataset
 
 
 class CTCDataset(Dataset):
-    def __init__(self, data_dir, patch_size=128, size=None):
-        print(f"{self.__class__.__name__} created! Accessing data from {data_dir}")
-        self.image_list = glob(os.path.join(data_dir, "images", "*.tif"))
-        self.mask_list = glob(os.path.join(data_dir, "masks", "*.tif"))
-        assert len(self.image_list) == len(self.mask_list)
+    def __init__(
+        self,
+        data_dir="./",
+        type="train",
+        bg_id=0,
+        size=None,
+        transform=None,
+        crop_size=256,
+    ):
+        print(
+            "CTC `{}` dataloader created! Accessing data from {}/{}/".format(
+                type, data_dir, type
+            )
+        )
+
+        # get image and instance list
+        image_list = glob.glob(os.path.join(data_dir, f"{type}/", "images/*.tif"))
+        image_list.sort()
+        print(f"Number of images in `{type}` directory is {len(image_list)}")
+        self.image_list = image_list
+
+        instance_list = glob.glob(os.path.join(data_dir, f"{type}/", "masks/*"))
+        instance_list.sort()
+        print(
+            "Number of instances in `{}` directory is {}".format(
+                type, len(instance_list)
+            )
+        )
+        self.instance_list = instance_list
+
+        print("*************************")
+
+        self.bg_id = bg_id
         self.size = size
         self.real_size = len(self.image_list)
-        print(f"Number of files detected in dataset equals {self.real_size}")
-        self.patch_size = patch_size
+        self.transform = transform
+        self.type = type
+        self.crop_size = crop_size
 
     def __len__(self):
         return self.real_size if self.size is None else self.size
 
     def __getitem__(self, index):
-        sample = {}
         index = index if self.size is None else random.randint(0, self.real_size - 1)
-        image = tifffile.imread(self.image_list[index]).astype(np.float32)
-        image = normalize(image, 1, 99.8, axis=(0, 1))
-        mask = tifffile.imread(self.mask_list[index])
+        example = {}
 
-        H, W = mask.shape
+        # load image
+        image = tifffile.imread(self.image_list[index]).astype(np.float32)  # YX
+        image = normalize(image, 1, 99.8, (0, 1))
+        mask = tifffile.imread(self.instance_list[index])  # YX
+
         ids = np.unique(mask)
-        ids = ids[ids != 0]
-        bbox_outside = True
-        while bbox_outside:
-            id_chosen = np.random.choice(ids)
-            y, x = np.where(mask == id_chosen)
+        ids = ids[ids != self.bg_id]
+
+        # Randomly pick one object centered crop
+        outside = True
+        while outside:
+            random_id = np.random.choice(ids)
+            y, x = np.where(mask == random_id)
             ym, xm = int(np.mean(y)), int(np.mean(x))
-            top_left = (ym - self.patch_size // 2, xm - self.patch_size // 2)
-            bottom_right = (ym + self.patch_size // 2, xm + self.patch_size // 2)
-            if top_left[0] < 0 or top_left[1] < 0:
-                pass
-            elif bottom_right[0] > H or bottom_right[1] > W:
+            tl_y = ym - self.crop_size // 2
+            tl_x = xm - self.crop_size // 2
+            br_y = tl_y + self.crop_size
+            br_x = tl_x + self.crop_size
+
+            if tl_y < 0 or tl_x < 0 or br_y > mask.shape[0] or br_x > mask.shape[1]:
                 pass
             else:
-                sample["image_crop"] = image[
-                    np.newaxis,
-                    top_left[0] : bottom_right[0],
-                    top_left[1] : bottom_right[1],
-                ]
-                mask_crop = mask[
-                    np.newaxis,
-                    top_left[0] : bottom_right[0],
-                    top_left[1] : bottom_right[1],
-                ]
-                sample["mask_crop"] = label(mask_crop)[np.newaxis, ...].astype(np.uint8)
-                bbox_outside = False
-        return sample
+                image_crop = image[tl_y:br_y, tl_x:br_x]
+                mask[tl_y:br_y, tl_x:br_x]
+                outside = False  # leave the while loop
+
+        example["image"] = image_crop[..., np.newaxis]  # CYX
+        # example["im_name"] = (
+        #    self.image_list[index][:-4] + "_" + str(random_id).zfill(3) + ".tif"
+        # )
+        # example["instance"] = mask_crop[np.newaxis, ...]
+        return example

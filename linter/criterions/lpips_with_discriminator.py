@@ -1,13 +1,30 @@
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
+
 from linter.criterions.lpips import LPIPS
 from linter.criterions.nlayer_discriminator import NLayerDiscriminator, weights_init
 
+
+def adopt_weight(weight, global_step, threshold=0, value=0.0):
+    if global_step < threshold:
+        weight = value
+    return weight
+
+
+def vanilla_d_loss(logits_real, logits_fake):
+    d_loss = 0.5 * (
+        torch.mean(F.softplus(-logits_real)) + torch.mean(F.softplus(logits_fake))
+    )
+    return d_loss
+
+
 def hinge_d_loss(logits_real, logits_fake):
-    loss_real = torch.mean(F.relu(1. - logits_real))
-    loss_fake = torch.mean(F.relu(1. + logits_fake))
+    loss_real = torch.mean(F.relu(1.0 - logits_real))
+    loss_fake = torch.mean(F.relu(1.0 + logits_fake))
     d_loss = 0.5 * (loss_real + loss_fake)
     return d_loss
+
 
 class LPIPS_with_discriminator(nn.Module):
     def __init__(
@@ -29,13 +46,15 @@ class LPIPS_with_discriminator(nn.Module):
         assert disc_loss in ["hinge", "vanilla"]
         self.kl_weight = kl_weight
         self.pixel_weight = pixel_loss_weight
-        self.perceptual_loss = LPIPS().eval() # TODO --> load from pretrained!
+        self.perceptual_loss = LPIPS().eval()  # TODO --> load from pretrained!
         self.perceptual_weight = perceptual_weight
         # output log variance
         self.logvar = nn.Parameter(torch.ones(size=()) * log_var_init)
 
         self.discriminator = NLayerDiscriminator(
-            input_nc=disc_in_channels, n_layers=disc_num_layers, use_actnorm=use_act_norm
+            input_nc=disc_in_channels,
+            n_layers=disc_num_layers,
+            use_actnorm=use_act_norm,
         ).apply(weights_init)
         self.discriminator_iter_start = disc_start
         self.disc_loss = hinge_d_loss if disc_loss == "hinge" else vanilla_d_loss
@@ -122,14 +141,14 @@ class LPIPS_with_discriminator(nn.Module):
             )
 
             log = {
-                "{}/total_loss".format(split): loss.clone().detach().mean(),
-                "{}/logvar".format(split): self.logvar.detach(),
-                "{}/kl_loss".format(split): kl_loss.detach().mean(),
-                "{}/nll_loss".format(split): nll_loss.detach().mean(),
-                "{}/rec_loss".format(split): rec_loss.detach().mean(),
-                "{}/d_weight".format(split): d_weight.detach(),
-                "{}/disc_factor".format(split): torch.tensor(disc_factor),
-                "{}/g_loss".format(split): g_loss.detach().mean(),
+                f"{split}/total_loss": loss.clone().detach().mean(),
+                f"{split}/logvar": self.logvar.detach(),
+                f"{split}/kl_loss": kl_loss.detach().mean(),
+                f"{split}/nll_loss": nll_loss.detach().mean(),
+                f"{split}/rec_loss": rec_loss.detach().mean(),
+                f"{split}/d_weight": d_weight.detach(),
+                f"{split}/disc_factor": torch.tensor(disc_factor),
+                f"{split}/g_loss": g_loss.detach().mean(),
             }
             return loss, log
 
@@ -152,8 +171,8 @@ class LPIPS_with_discriminator(nn.Module):
             d_loss = disc_factor * self.disc_loss(logits_real, logits_fake)
 
             log = {
-                "{}/disc_loss".format(split): d_loss.clone().detach().mean(),
-                "{}/logits_real".format(split): logits_real.detach().mean(),
-                "{}/logits_fake".format(split): logits_fake.detach().mean(),
+                f"{split}/disc_loss": d_loss.clone().detach().mean(),
+                f"{split}/logits_real": logits_real.detach().mean(),
+                f"{split}/logits_fake": logits_fake.detach().mean(),
             }
             return d_loss, log

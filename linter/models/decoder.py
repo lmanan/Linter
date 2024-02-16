@@ -2,10 +2,11 @@ import numpy as np
 import torch
 import torch.nn as nn
 
-from linter.models.attention import AttnBlock, make_attn
+from linter.models.attention import make_attn
 from linter.models.resnet import ResnetBlock
-from linter.models.utils import normalize, nonlinearity
 from linter.models.updownsample import Upsample
+from linter.models.utils import nonlinearity, normalize
+
 
 class Decoder(nn.Module):
     def __init__(
@@ -40,7 +41,7 @@ class Decoder(nn.Module):
         self.tanh_out = tanh_out
 
         # compute in_ch_mult, block_in and curr_res at lowest res
-        (1,) + tuple(ch_mult)
+        (1, *tuple(ch_mult))
         block_in = ch * ch_mult[self.num_resolutions - 1]
         curr_res = resolution // 2 ** (self.num_resolutions - 1)
         self.z_shape = (1, z_channels, curr_res, curr_res)
@@ -137,4 +138,3 @@ class Decoder(nn.Module):
         if self.tanh_out:
             h = torch.tanh(h)
         return h
-

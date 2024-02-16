@@ -1,8 +1,8 @@
 import torch
 import torch.nn as nn
 
-from linter.models.utils import normalize
-from linter.models.utils import nonlinearity
+from linter.models.utils import nonlinearity, normalize
+
 
 class ResnetBlock(nn.Module):
     def __init__(
@@ -62,8 +62,3 @@ class ResnetBlock(nn.Module):
                 x = self.nin_shortcut(x)
 
         return x + h
-
-
-
-
-

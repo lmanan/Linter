@@ -10,4 +10,10 @@ TODO: Configs to figure out about original experiments in [Latent Diffusion](htt
 - [ ] Batch size 
 - [ ] Learning Rate
 - [ ] Optimizer
-- [ ] Number of Iterations
+- [ ] Number of iterations
+
+
+TODO: 
+- [ ] What is `ActNorm`?
+- [ ] What does `hinge_d_loss` do?
+- [ ] What are the four outputs expected by the criterion?
