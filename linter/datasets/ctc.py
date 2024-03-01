@@ -81,7 +81,7 @@ class CTCDataset(Dataset):
                 mask[tl_y:br_y, tl_x:br_x]
                 outside = False  # leave the while loop
 
-        example["image"] = image_crop[..., np.newaxis]  # CYX
+        example["image"] = image_crop[np.newaxis, ..., ]  # CYX
         # example["im_name"] = (
         #    self.image_list[index][:-4] + "_" + str(random_id).zfill(3) + ".tif"
         # )
