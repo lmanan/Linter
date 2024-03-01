@@ -7,7 +7,7 @@ pip install torch torchvision
 ```
 
 TODO: Configs to figure out about original experiments in [Latent Diffusion](https://github.com/CompVis/latent-diffusion/tree/main):
-- [ ] Batch size 
+- [x] Batch size = originally 12 
 - [ ] Learning Rate
 - [ ] Optimizer
 - [ ] Number of iterations
