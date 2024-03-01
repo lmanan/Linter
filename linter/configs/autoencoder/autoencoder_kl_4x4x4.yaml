@@ -1,18 +1,9 @@
-model:
-  base_learning_rate: 4.5e-6
+model_config:
   target: linter.models.autoencoder.AutoencoderKL
   params:
     monitor: "val/rec_loss"
     embed_dim: 4 # TODO: previously 16
-    lossconfig:
-      target: linter.criterions.LPIPSWithDiscriminator
-      params:
-        disc_start: 50001
-        kl_weight: 0.000001
-        disc_weight: 0.5
-        disc_in_channels: 1
-
-    ddconfig:
+    dd_config:
       double_z: True
       z_channels: 4 # TODO: I think this should match embed_dim
       resolution: 256
@@ -21,27 +12,40 @@ model:
       ch: 128
       ch_mult: [ 1,1,2,2,4]  # TODO: 64 size will have four rounds of downsampling. This goes down to 64/(16) = 4 x 4
       num_res_blocks: 2
-      attn_resolutions: [16]
+      attn_resolutions: [16] # TODO: 16 before
       dropout: 0.0
 
+loss_config:
+  target: linter.criterions.LPIPSWithDiscriminator
+  params:
+    disc_start: 50001
+    kl_weight: 0.000001
+    disc_weight: 0.5
+    disc_in_channels: 1
 
-data:
-  target: main.DataModuleFromConfig
+
+dataset_config:
   params:
     batch_size: 12
-    wrap: True
     train:
       target: linter.datasets.ctc.CTC
       params:
-        data_dir: "/Users/lalitm/data/CTC/2d/Fluo-N2DL-HeLa/Fluo-N2DL-HeLa/"
+        data_dir: "/Users/lalitm/Desktop/data/CTC/2d/Fluo-N2DL-HeLa/Fluo-N2DL-HeLa/"
         type: "train"
         crop_size: 64
     validation:
       target: linter.datasets.ctc.CTC
       params:
-        data_dir: "/Users/lalitm/data/CTC/2d/Fluo-N2DL-HeLa/Fluo-N2DL-HeLa/"
+        data_dir: "/Users/lalitm/Desktop/data/CTC/2d/Fluo-N2DL-HeLa/Fluo-N2DL-HeLa/"
         type: "val"
         crop_size: 64
+
+train_config:
+  params:
+     initial_learning_rate: 4.5e-6
+     device: "mps"
+
+
 lightning:
   callbacks:
     image_logger:
